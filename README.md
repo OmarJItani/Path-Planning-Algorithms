@@ -5,6 +5,6 @@ In this repository, I present my implementation to various commonly known path p
 The repository currently present the following algorithms:
 
 - Astar
-- Djikestra
+- Dijkstra
 
 Other path planning algorithms will be added soon.
