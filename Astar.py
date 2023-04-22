@@ -8,13 +8,17 @@ class Graph():
         # store map dimension and obstacle intensity
         self.map_dim = map_dim
         self.obstacle_intensity = obstacle_intensity
-        
-        # create create the map with random obstacles
+
+        # create the map with random obstacles
         self.map = np.array([[np.array([1.,1.,1.]) if uniform(0, 1) >= self.obstacle_intensity else np.array([0.,0.,0.]) for i in range(self.map_dim)] for j in range(self.map_dim)])
-        
+
         # randomly select initial and goal positions
         self.goal_position = [int(uniform(0, self.map_dim-1)) , int(uniform(0, self.map_dim-1))]
         self.initial_position = [int(uniform(0, self.map_dim-1)) , int(uniform(0, self.map_dim-1))]
+
+        # Ensure that initial and goal positions are not spawned on obstacles
+        self.map[self.initial_position[0],self.initial_position[1]] = np.array([1.,1.,1.])
+        self.map[self.goal_position[0],self.goal_position[1]] = np.array([1.,1.,1.])
 
     def draw_map(self, pathsol, visited_nodes):
         """
@@ -23,6 +27,19 @@ class Graph():
         Input: 
         pathsol: Path resulting from the Astar function.
         """
+
+        # draw visited nodes in gray
+        for i in visited_nodes[:-2]:
+            self.map[i.position[0],i.position[1],0] = 0.5
+            self.map[i.position[0],i.position[1],1] = 0.5
+            self.map[i.position[0],i.position[1],2] = 0.5
+
+
+        # draw path in blue on map
+        for i in pathsol[1:-1]:
+            self.map[i.position[0],i.position[1],0] = 0
+            self.map[i.position[0],i.position[1],1] = 0
+            self.map[i.position[0],i.position[1],2] = 1
 
         # make goal position red on map
         self.map[self.goal_position[0],self.goal_position[1],0] = 1
@@ -34,38 +51,16 @@ class Graph():
         self.map[self.initial_position[0],self.initial_position[1],1] = 1
         self.map[self.initial_position[0],self.initial_position[1],2] = 0
 
-        plt.ion()
-        plt.show()
+        # plot the map
+        map2 = np.flipud(np.transpose(self.map,(1,0,2)))
+        plt.imshow(map2,cmap='gray',vmin=0, vmax=1)  # grayscale: gray / rgb: brg
 
         ax = plt.gca()
         ax.set_xticks(np.arange(-.5, self.map_dim, 1), minor=True)
         ax.set_yticks(np.arange(-.5, self.map_dim, 1), minor=True)
-        # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.5)
+        ax.grid(which='minor', color='w', linestyle='-', linewidth=0.1)
 
-        # draw visited nodes in gray
-        for i in visited_nodes[1:-1]:
-            self.map[i.position[0],i.position[1],0] = 0.5
-            self.map[i.position[0],i.position[1],1] = 0.5
-            self.map[i.position[0],i.position[1],2] = 0.5
-
-            plt.clf()
-            map2 = np.flipud(np.transpose(self.map,(1,0,2)))
-            plt.imshow(map2,cmap='gray',vmin=0, vmax=1)  # grayscale: gray / rgb: brg
-            plt.pause(0.0001)
-
-        # draw path in blue on map
-        for i in pathsol[1:-1]:
-            self.map[i.position[0],i.position[1],0] = 0
-            self.map[i.position[0],i.position[1],1] = 0
-            self.map[i.position[0],i.position[1],2] = 1
-        
-        plt.ioff()
-        
-        map2 = np.flipud(np.transpose(self.map,(1,0,2)))
-        plt.imshow(map2,cmap='gray',vmin=0, vmax=1)  # grayscale: gray / rgb: brg
-        
         plt.show()
-
 
 class node():
     nodes_lst = [] # list of all created nodes
@@ -110,7 +105,7 @@ class node():
                         else:
                             # else, create neighbouring node
                             self.neighbours.append( node([self.position[0]+i-1,self.position[1]+j-1], self.graph, 1000, 1000) )
-        
+
 
 
 
@@ -124,7 +119,7 @@ def A_star(graph):
     Output:
     pathsol: Optimal path connecting the initial position to the goal position.
     """
-    
+
     def dist(lst1,lst2):
         """
         Computes the eulidean distance between two points
@@ -153,7 +148,7 @@ def A_star(graph):
                 least_cost = cost
                 least_node = open_list.index(i)
         current_node = open_list[least_node]
-        
+
         # if current_node is the goal node, extract and return path
         if current_node.position == graph.goal_position:
             path = [current_node]
@@ -169,14 +164,14 @@ def A_star(graph):
 
             for i in current_node.neighbours:
                 neighbour_cost = current_node.g_cost + dist(current_node.position,i.position)
-                
+
                 if i in open_list:
                     if i.g_cost <= neighbour_cost:
                         pass
                     else:
                         i.g_cost = neighbour_cost
                         i.parent = current_node
-                
+
                 elif i in closed_list:
                     if i.g_cost <= neighbour_cost:
                         pass
@@ -194,7 +189,7 @@ def A_star(graph):
                     i.h_cost = dist(i.position, graph.goal_position)
                     i.g_cost = neighbour_cost
                     i.parent = current_node
-            
+
             to_be_added_to_closed = open_list.pop(open_list.index(current_node))
             if to_be_added_to_closed not in closed_list:
                 closed_list.append(to_be_added_to_closed)
