@@ -26,6 +26,7 @@ class Graph():
         
         Input: 
         pathsol: Path resulting from the Astar function.
+        visited_nodes: List of visited nodes
         """
 
         # draw visited nodes in gray
@@ -61,6 +62,58 @@ class Graph():
         ax.grid(which='minor', color='w', linestyle='-', linewidth=0.1)
 
         plt.show()
+
+    def draw_map_dynamic(self, pathsol, visited_nodes):
+        """
+        Draws the map dynamically.
+        
+        Input: 
+        pathsol: Path resulting from the Astar function.
+        visited_nodes: List of visited nodes
+        """
+
+        # make goal position red on map
+        self.map[self.goal_position[0],self.goal_position[1],0] = 1
+        self.map[self.goal_position[0],self.goal_position[1],1] = 0
+        self.map[self.goal_position[0],self.goal_position[1],2] = 0
+
+        # make initial position green on map
+        self.map[self.initial_position[0],self.initial_position[1],0] = 0
+        self.map[self.initial_position[0],self.initial_position[1],1] = 1
+        self.map[self.initial_position[0],self.initial_position[1],2] = 0
+
+        plt.ion()
+        plt.show()
+
+        ax = plt.gca()
+        ax.set_xticks(np.arange(-.5, self.map_dim, 1), minor=True)
+        ax.set_yticks(np.arange(-.5, self.map_dim, 1), minor=True)
+        # ax.grid(which='minor', color='k', linestyle='-', linewidth=0.5)
+
+        # draw visited nodes in gray
+        for i in visited_nodes[1:-1]:
+            self.map[i.position[0],i.position[1],0] = 0.5
+            self.map[i.position[0],i.position[1],1] = 0.5
+            self.map[i.position[0],i.position[1],2] = 0.5
+
+            plt.clf()
+            map2 = np.flipud(np.transpose(self.map,(1,0,2)))
+            plt.imshow(map2,cmap='gray',vmin=0, vmax=1)  # grayscale: gray / rgb: brg
+            plt.pause(0.0001)
+
+        # draw path in blue on map
+        for i in pathsol[1:-1]:
+            self.map[i.position[0],i.position[1],0] = 0
+            self.map[i.position[0],i.position[1],1] = 0
+            self.map[i.position[0],i.position[1],2] = 1
+        
+        plt.ioff()
+        
+        map2 = np.flipud(np.transpose(self.map,(1,0,2)))
+        plt.imshow(map2,cmap='gray',vmin=0, vmax=1)  # grayscale: gray / rgb: brg
+        
+        plt.show()
+
 
 class node():
     nodes_lst = [] # list of all created nodes
@@ -211,6 +264,7 @@ def main():
 
     # Visualize solution
     graph.draw_map(pathsol, visited_nodes)
+    # graph.draw_map_dynamic(pathsol, visited_nodes)
 
 if __name__ == '__main__':
     main()
