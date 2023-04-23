@@ -191,7 +191,7 @@ def A_star(graph):
     closed_list = []
     open_list = [node(graph.initial_position, graph)]
 
-    while(len(open_list) > 0):
+    while(open_list):
 
         least_cost = 10000
         for i in open_list:
@@ -246,6 +246,9 @@ def A_star(graph):
             to_be_added_to_closed = open_list.pop(open_list.index(current_node))
             if to_be_added_to_closed not in closed_list:
                 closed_list.append(to_be_added_to_closed)
+    
+    # no solution
+    return [] , closed_list
 
 
 def main():
