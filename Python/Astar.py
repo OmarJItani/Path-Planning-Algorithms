@@ -2,6 +2,7 @@ from random import uniform
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from queue import PriorityQueue
 
 class Graph():
     def __init__(self, map_dim, obstacle_intensity):
@@ -128,6 +129,10 @@ class node():
         # add the created instance to the list of all nodes
         node.nodes_lst.append(self)
 
+    # Allows to compare the nodes based on the values of their costs
+    def __lt__(self, other):
+        return self.g_cost + self.h_cost <= other.g_cost + other.h_cost
+
     # Represent the node as a string: "Node [ x , y]"
     def __repr__(self):
         return f'Node {self.position}'
@@ -146,7 +151,8 @@ class node():
                     for every_node in node.nodes_lst:
                         if every_node.position == [self.position[0]+i-1,self.position[1]+j-1]:
                             node_already_exists = 1
-                            self.neighbours.append( every_node )
+                            if (i!=1 and j!=1): # neighbouring node is not the parent node
+                                self.neighbours.append( every_node )
                             break
 
                     # only consider creating a node if it does not exist
@@ -189,18 +195,12 @@ def A_star(graph):
         return dist
 
     closed_list = []
-    open_list = [node(graph.initial_position, graph)]
+    open_list = PriorityQueue()
+    open_list.put( node(graph.initial_position, graph) )
 
-    while(open_list):
+    while(open_list.qsize()):
 
-        least_cost = 10000
-        for i in open_list:
-            cost = i.g_cost + i.h_cost
-
-            if cost < least_cost:
-                least_cost = cost
-                least_node = open_list.index(i)
-        current_node = open_list[least_node]
+        current_node = open_list.queue[0] # get element with best cost but keep it in open_list
 
         # if current_node is the goal node, extract and return path
         if current_node.position == graph.goal_position:
@@ -218,7 +218,7 @@ def A_star(graph):
             for i in current_node.neighbours:
                 neighbour_cost = current_node.g_cost + dist(current_node.position,i.position)
 
-                if i in open_list:
+                if i in open_list.queue:
                     if i.g_cost <= neighbour_cost:
                         pass
                     else:
@@ -231,19 +231,19 @@ def A_star(graph):
                     else:
                         ind = closed_list.index(i)
                         to_be_added_to_open = closed_list.pop(ind)
-                        if to_be_added_to_open not in open_list:
-                            open_list.append(to_be_added_to_open)
+                        if to_be_added_to_open not in open_list.queue:
+                            open_list.put(to_be_added_to_open)
                         i.g_cost = neighbour_cost
                         i.parent = current_node
 
                 else:
-                    if i not in open_list:
-                        open_list.append(i)
+                    if i not in open_list.queue:
+                        open_list.put(i)
                     i.h_cost = dist(i.position, graph.goal_position)
                     i.g_cost = neighbour_cost
                     i.parent = current_node
 
-            to_be_added_to_closed = open_list.pop(open_list.index(current_node))
+            to_be_added_to_closed = open_list.get()
             if to_be_added_to_closed not in closed_list:
                 closed_list.append(to_be_added_to_closed)
     
@@ -262,8 +262,6 @@ def main():
 
     # Find optimal path
     pathsol , visited_nodes = A_star(graph)
-    # print(f'The path is: {pathsol}')
-    print(f'Visited nodes: {visited_nodes}')
 
     # Visualize solution
     graph.draw_map(pathsol, visited_nodes)
