@@ -2,7 +2,7 @@
 
 ## What is in this repositroy?
 
-In this repository, I present my implementation to various commonly known path planning algorithms.
+In this repository, I present my implementation to various path planning algorithms in both Python and C++.
 
 The repository currently present the following algorithms:
 
